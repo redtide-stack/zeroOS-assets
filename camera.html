@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Win11 Camera</title>
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+    <style>
+        :root {
+            --win-bg: #1c1c1c;
+            --win-btn: #323232;
+            --win-hover: #454545;
+            --win-text: #ffffff;
+            --win-radius: 4px;
+        }
+
+        body {
+            background-color: var(--win-bg);
+            color: var(--win-text);
+            font-family: 'Open Sans', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px; 
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+            transition: max-width 0.4s ease;
+            aspect-ratio: 16 / 9;
+        }
+
+        .camera-container.active { max-width: 800px; }
+
+        video { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+        /* Flash */
+        #flash {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none; z-index: 10;
+        }
+        .flash-active { animation: camera-flash 0.15s ease-out; }
+        @keyframes camera-flash { 0% { opacity: 0; } 50% { opacity: 0.9; } 100% { opacity: 0; } }
+
+        .start-screen { text-align: center; padding: 20px; align-items: center; justify-content: center; }
+        .instruction { font-size: 13px; color: #aaa; margin-top: 15px; max-width: 300px; line-height: 1.5; text-align: center; justify-content: center; align-content: center; align-items: center;}
+
+        .controls { margin-top: 20px; display: none; gap: 10px; }
+
+        button {
+            background: var(--win-btn); color: var(--win-text); border: 1px solid rgba(255,255,255,0.1);
+            padding: 6px 20px; font-size: 13px; border-radius: var(--win-radius);
+            cursor: pointer; transition: 0.2s; outline: none;
+        }
+        button:hover { background: var(--win-hover); border-color: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+
+    <div class="camera-container" id="container">
+        <div id="flash"></div>
+        <video id="webcam" autoplay playsinline></video>
+        <div class="start-screen" id="startScreen">
+            <button id="startBtn">Start Camera</button>
+            <p class="instruction">This will request permission to use your camera. To turn off camera, refresh the page or click "Stop Camera".</p>
+        </div>
+    </div>
+
+    <div class="controls" id="controls">
+        <button id="snapBtn">Take Photo</button>
+        <button id="stopBtn">Stop Camera</button>
+    </div>
+
+    <canvas id="hiddenCanvas" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('webcam');
+const canvas = document.getElementById('hiddenCanvas');
+const container = document.getElementById('container');
+const startScreen = document.getElementById('startScreen');
+const controls = document.getElementById('controls');
+const flash = document.getElementById('flash');
+
+let stream = null;
+
+// Start Camera Function
+document.getElementById('startBtn').onclick = async () => {
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
+        });
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+            video.style.display = 'block';
+            startScreen.style.display = 'none';
+            controls.style.display = 'flex';
+            container.classList.add('active');
+        };
+    } catch (e) { 
+        alert("Camera access denied. Check site settings."); 
+    }
+};
+
+// Simplified Take Photo Function
+document.getElementById('snapBtn').onclick = () => {
+    // 1. Visual Flash
+    flash.classList.remove('flash-active');
+    void flash.offsetWidth; 
+    flash.classList.add('flash-active');
+
+    // 2. Capture and Instant Download
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    
+
+    // Using DataURL for faster browser response
+    const dataURL = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = `Photo.png`;
+    
+    // Explicitly add to body, click, then remove
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+// Stop Camera Function
+document.getElementById('stopBtn').onclick = () => {
+    if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+    }
+    video.style.display = 'none';
+    startScreen.style.display = 'block';
+    controls.style.display = 'none';
+    container.classList.remove('active');
+};
+    </script>
+</body>
+</html>
+
