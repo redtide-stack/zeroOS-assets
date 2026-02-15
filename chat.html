@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatroom</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+        :root {
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --border-color: #333333;
+            --text-main: #e0e0e0;
+            --accent-color: #4ade80;
+            --button-hover: #3bbd6b;
+            --input-bg: #2a2a2a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--container-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            font-family: 'Inter';
+        }
+
+        h1 {
+            margin-top: 0;
+            font-weight: 600;
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            font-family: 'Inter';
+        }
+
+        .messages {
+            height: 450px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+            font-family: 'Inter';
+        }
+
+        .messages::-webkit-scrollbar { width: 6px; }
+        .messages::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+        .message {
+            margin: 12px 0;
+            line-height: 1.5;
+            word-wrap: break-word;
+            font-family: 'Inter';
+        }
+
+        .message .username {
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-right: 8px;
+            font-family: 'Inter';
+        }
+
+        /* Fixed to single line flexbox */
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-family: 'Inter';
+        }
+
+        input {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: 'Inter';
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+        }
+
+        #message { flex: 1; }
+        #username { width: 120px; }
+
+        button {
+            padding: 10px 18px;
+            border: none;
+            background-color: #333;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 400;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: 'Inter';
+        }
+
+        button:hover {
+            background-color: #444;
+        }
+
+        #send {
+            background-color: var(--accent-color);
+            color: #000;
+            font-weight: 600;
+        }
+
+        #send:hover {
+            background-color: var(--button-hover);
+        }
+
+        #clear {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <center>
+            <script type="text/javascript" src="//widget.supercounters.com/ssl/online_i.js"></script>
+            <script type="text/javascript">sc_online_i(1699360,"ffffff","e61c1c");</script>
+        </center>
+        
+        <h1>Chatroom</h1>
+        
+        <div class="messages" id="messages"></div>
+
+        <div class="input-container">
+            <input type="text" id="username" placeholder="Username">
+            <input type="text" id="message" placeholder="Type a message..." maxlength="104729">
+            <button id="send">Send</button>
+            <button id="clear" onclick="clearMessages()">Clear</button>
+        </div>
+    </div>
+
+    <body oncontextmenu="return false;">
+
+    <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBos64zkDTR7UImdF3eGZ8Jq-mVzMknktI",
+        authDomain: "shinys-chatroom.firebaseapp.com",
+        projectId: "shinys-chatroom",
+        storageBucket: "",
+        messagingSenderId: "285664099692",
+        appId: "1:285664099692:web:5a7f82ea26b5c0d6e507b4",
+        measurementId: "G-5C3KJZ9LMN"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    database.ref('messages').on('child_added', function(snapshot) {
+        const message = snapshot.val();
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        messageElement.innerHTML = `<span class="username">${message.username}:</span> ${message.message}`;
+        const msgContainer = document.getElementById('messages');
+        msgContainer.appendChild(messageElement);
+        msgContainer.scrollTop = msgContainer.scrollHeight;
+    });
+
+    document.getElementById('send').addEventListener('click', function() {
+        const username = document.getElementById('username').value || "Anonymous";
+        const message = document.getElementById('message').value;
+        if (message.trim() !== "") {
+            const messageData = {
+                username: username,
+                message: message
+            };
+            database.ref('messages').push(messageData);
+            document.getElementById('message').value = '';
+            localStorage.setItem('username', username);
+        }
+    });
+
+    document.getElementById('message').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') document.getElementById('send').click();
+    });
+    
+    function clearMessages() {
+        if(confirm("Clear all messages?")) {
+            database.ref('messages').remove();
+            document.getElementById('messages').innerHTML = '';
+        }
+    }
+    
+    document.getElementById('username').value = localStorage.getItem('username') || 'Anonymous';
+    
+    function updateUsername() {
+        const username = document.getElementById('username').value;
+        localStorage.setItem('username', username);
+    }
+    
+    function shareLink() {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard');
+    }
+    
+    function openLink() {
+        window.open('https://tinylink.at/4b76', '_blank');
+    }
+    </script>
+</body>
+</html>
+ 
+
