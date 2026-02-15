@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Clever | Portal</title>
+  <link rel="icon" href="https://resources.finalsite.net/images/f_auto,q_auto/v1689877141/mooreschoolscom/emadd6nvplrnh1vsswjf/Clever-Logo.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+    * {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  margin: 0;
+  font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  /* Image now spans the whole viewport */
+  background: url('dark-bgnew.png') center/cover no-repeat fixed;
+  color: #FFFFFF; 
+  overflow: hidden; 
+}
+
+/* Base style for top bars: VERY transparent background with a blur */
+#tab-bar, #controls {
+  background: rgba(255, 255, 255, 0.05); /* Almost transparent white */
+  backdrop-filter: blur(15px); /* The frosted glass effect */
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Very subtle border line */
+}
+
+
+#controls {
+  padding: 0.5rem 1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Rounded Address Bar (Transparent) */
+input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3); /* Darker glass for better text contrast */
+  color: #FFFFFF; 
+  font-size: 1rem;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle outline */
+  border-radius: 12px; 
+  outline: none;
+  transition: 0.3s all ease;
+  font-family: Open Sans;
+  backdrop-filter: blur(5px);
+}
+
+input::placeholder {
+  color: #CCCCCC; 
+}
+
+input:focus {
+  border: 1px solid #60a5fa; /* Blue highlight when focused */
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Rounded Buttons (Transparent) */
+button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF; 
+  border: 1px solid rgba(255, 255, 255, 0.15); 
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: ease 0.3s;
+  backdrop-filter: blur(5px);
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px); /* Slight lift effect on hover */
+}
+
+#tab-bar {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.1);
+  font-family: 'Open Sans';
+  font-weight: bold;
+}
+
+#tab-bar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.tab {
+  padding: 0.5rem 1rem;
+  background: transparent; /* No solid background */
+  border-right: 1px solid rgba(255, 255, 255, 0.08); /* Minimal divider */
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 200px;
+  min-width: 100px;
+  font-size: 0.9rem;
+  color: #FFFFFF; 
+}
+
+.tab.active {
+  background: rgba(255, 255, 255, 0.15); /* Slightly brighter active tab */
+  border-bottom: 2px solid #60a5fa;
+  color: #FFFFFF;
+}
+
+.tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  color: #FFFFFF; 
+}
+
+.tab-close {
+  font-size: 1.2rem;
+  line-height: 1;
+  border-radius: 5px;
+  padding: 4px;
+  transition: 0.25s ease;
+  color: #FFFFFF; 
+}
+
+.tab-close:hover {
+  color: #FF4444; /* Brighter red on hover */
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#new-tab {
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1); 
+  color: #FFFFFF; 
+  cursor: pointer;
+  font-size: 1.2rem;
+  border-radius: 0 0 8px 0; 
+  transition: 0.3s ease;
+}
+
+#new-tab:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+}
+
+#content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: transparent;
+}
+
+.iframe-container {
+  flex: 1;
+  display: none;
+}
+
+.iframe-container.active {
+  display: block;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent; 
+}
+
+#devtools {
+  height: 0;
+  background: #1a1a1a; /* Kept opaque black for console clarity */
+  border-top: 1px solid rgba(255, 255, 255, 0.2); 
+  overflow: hidden;
+  transition: height 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+/* DevTools content remains opaque black as requested to prevent breaking */
+
+#devtools-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background: #242424;
+  border-bottom: 1px solid #333;
+}
+/* ... all other devtools styles remain untouched ... */
+#devtools-content { display: flex; flex: 1; overflow: hidden; }
+#devtools-tabs { display: flex; gap: 0.5rem; }
+.devtools-tab { padding: 0.25rem 0.5rem; cursor: pointer; font-size: 0.85rem; }
+.devtools-tab.active { background: #333; color: #e0e0e0; border-radius: 4px; }
+#devtools-panels { flex: 1; display: flex; overflow: hidden; }
+.devtools-panel { flex: 1; display: none; padding: 0.5rem; overflow: auto; }
+.devtools-panel.active { display: flex; flex-direction: column; }
+#console-input { width: 100%; background: #121212; color: #e0e0e0; border: 1px solid #333; padding: 0.5rem; font-family: monospace; margin-top: 0.5rem; border-radius: 4px; }
+#console-output { flex: 1; overflow: auto; white-space: pre-wrap; padding: 0.5rem; background: #121212; border: 1px solid #333; margin-bottom: 0.5rem; border-radius: 4px; }
+.console-line { margin-bottom: 0.25rem; border-bottom: 1px solid #222; padding-bottom: 0.25rem; }
+.console-error { color: #f87171; }
+.console-warn { color: #fbbf24; }
+.console-info { color: #60a5fa; }
+.action-buttons { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.small-button { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
+
+/* Hide the status bar completely */
+.status-bar {
+  display: none !important; 
+}
+
+  </style>
+</head>
+<body background="browserbg.png">
+  <div id="tab-bar">
+    <div id="new-tab">+</div>
+  </div>
+  
+  <div id="controls">
+    <button id="back-button">←</button>
+    <button id="forward-button">→</button>
+    <button id="refresh-button">↻</button>
+    <input id="urlInput" placeholder="Enter URL or search..." />
+    <button id="go-button">Go</button>
+    <!-- <button id="toggle-devtools">{ }</button> -->
+  </div>
+  
+  <div id="content">
+    <!-- Iframe containers will be added here dynamically -->
+  </div>
+  
+  
+
+  <body oncontextmenu="return false;">
+
+  
+  <div class="status-bar">
+    <span id="status-text">Ready</span>
+    <span id="tab-count">Tabs: 1</span>
+  </div>
+
+  <script>
+    const proxyBase = "https://api.allorigins.win/raw?url=";
+    const tabs = [];
+    let activeTabId = null;
+    let tabCounter = 0;
+    
+    // Initialize the browser with one tab
+    document.addEventListener('DOMContentLoaded', () => {
+      createNewTab();
+      
+      // Set up event listeners
+    //   document.getElementById('new-tab').addEventListener('click', createNewTab);
+    document.getElementById('new-tab').addEventListener('click', () => createNewTab());
+
+      document.getElementById('go-button').addEventListener('click', loadPageInActiveTab);
+      document.getElementById('toggle-devtools').addEventListener('click', toggleDevTools);
+      document.getElementById('close-devtools').addEventListener('click', closeDevTools);
+      document.getElementById('console-input').addEventListener('keydown', handleConsoleInput);
+      document.getElementById('inject-js-button').addEventListener('click', injectJavaScript);
+      document.getElementById('clear-js-button').addEventListener('click', () => {
+        document.getElementById('js-inject-area').value = '';
+      });
+      document.getElementById('save-js-button').addEventListener('click', saveJavaScriptSnippet);
+      document.getElementById('saved-snippets').addEventListener('change', loadSavedSnippet);
+      document.getElementById('clear-network-log').addEventListener('click', () => {
+        document.getElementById('network-log').innerHTML = 'Network log cleared...';
+      });
+      document.getElementById('back-button').addEventListener('click', navigateBack);
+      document.getElementById('forward-button').addEventListener('click', navigateForward);
+      document.getElementById('refresh-button').addEventListener('click', refreshPage);
+      
+      // Set up devtools tabs
+      document.querySelectorAll('.devtools-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+          document.querySelectorAll('.devtools-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.devtools-panel').forEach(p => p.classList.remove('active'));
+          
+          e.target.classList.add('active');
+          const panelId = e.target.dataset.panel;
+          document.getElementById(`${panelId}-panel`).classList.add('active');
+        });
+      });
+      
+      // Load saved snippets from localStorage
+      loadSavedSnippetsFromStorage();
+    });
+    
+    function createNewTab(url = null) {
+      const tabId = `tab-${tabCounter++}`;
+      
+      // Create tab button
+      const tabElement = document.createElement('div');
+      tabElement.className = 'tab';
+      tabElement.dataset.tabId = tabId;
+      tabElement.innerHTML = `
+        <span class="tab-title">New Tab</span>
+        <span class="tab-close">×</span>
+      `;
+      tabElement.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('tab-close')) {
+          activateTab(tabId);
+        }
+      });
+      
+      // Add close button functionality
+      const closeButton = tabElement.querySelector('.tab-close');
+      closeButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeTab(tabId);
+      });
+      
+      // Insert tab before the new tab button
+      document.getElementById('tab-bar').insertBefore(tabElement, document.getElementById('new-tab'));
+      
+      // Create iframe container
+      const iframeContainer = document.createElement('div');
+      iframeContainer.className = 'iframe-container';
+      iframeContainer.id = `container-${tabId}`;
+      
+      const iframe = document.createElement('iframe');
+      iframe.id = `iframe-${tabId}`;
+      iframe.sandbox = "allow-scripts allow-forms allow-same-origin";
+      
+      iframeContainer.appendChild(iframe);
+      document.getElementById('content').appendChild(iframeContainer);
+      
+      // Add to tabs array
+      tabs.push({
+        id: tabId,
+        title: 'New Tab',
+        url: '',
+        history: [],
+        currentHistoryIndex: -1
+      });
+      
+      // Activate the new tab
+      activateTab(tabId);
+      
+      // If URL is provided, load it
+      if (url) {
+        document.getElementById('urlInput').value = url;
+        loadPageInActiveTab();
+      }
+      
+      updateTabCount();
+    }
+    
+    function activateTab(tabId) {
+      // Deactivate all tabs
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.iframe-container').forEach(container => container.classList.remove('active'));
+      
+      // Activate selected tab
+      document.querySelector(`.tab[data-tab-id="${tabId}"]`).classList.add('active');
+      document.getElementById(`container-${tabId}`).classList.add('active');
+      
+      // Update active tab ID
+      activeTabId = tabId;
+      
+      // Update URL input with the active tab's URL
+      const tab = tabs.find(t => t.id === tabId);
+      if (tab && tab.url) {
+        document.getElementById('urlInput').value = tab.url;
+      } else {
+        document.getElementById('urlInput').value = '';
+      }
+      
+      updateNavigationButtons();
+    }
+    
+    function closeTab(tabId) {
+      // Don't close if it's the last tab
+      if (tabs.length <= 1) {
+        return;
+      }
+      
+      // Remove tab from DOM
+      const tabElement = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
+      tabElement.remove();
+      
+      // Remove iframe container
+      const container = document.getElementById(`container-${tabId}`);
+      container.remove();
+      
+      // Remove from tabs array
+      const tabIndex = tabs.findIndex(t => t.id === tabId);
+      tabs.splice(tabIndex, 1);
+      
+      // If closing the active tab, activate another one
+      if (activeTabId === tabId) {
+        // Activate the tab to the left, or the first tab if there's none
+        const newActiveTab = tabs[Math.max(0, tabIndex - 1)];
+        activateTab(newActiveTab.id);
+      }
+      
+      updateTabCount();
+    }
+    
+    function updateTabTitle(tabId, title) {
+      const tab = tabs.find(t => t.id === tabId);
+      if (tab) {
+        tab.title = title || 'Untitled';
+        const tabElement = document.querySelector(`.tab[data-tab-id="${tabId}"] .tab-title`);
+        tabElement.textContent = tab.title;
+      }
+    }
+    
+    function looksLikeUrl(str) {
+      return /\./.test(str) && !/\s/.test(str);
+    }
+
+function prepareUrl(inputStr) {
+  inputStr = inputStr.trim();
+  if (!inputStr) return null;
+
+  if (looksLikeUrl(inputStr)) {
+    if (!/^https?:\/\//i.test(inputStr)) {
+      inputStr = "https://" + inputStr;
+    }
+    return inputStr;
+  } else {
+    const query = encodeURIComponent(inputStr);
+    return `https://mojeek.com/search?q=${query}`;
+  }
+}
+
+    
+    
+    // Randomized splash messages list
+const loadingMessages = [
+  "No ultraviolet?!",
+  "Bro can only play iready math games",
+  "Is it still christmas?",
+  "A green theme! What innovation!",
+  "if someone leaks this file istg",
+  "Stickman and guns is scary guys trust me",
+  "My twin quyen is gonna win",
+  "Jamaica we have a bobsled team",
+  "Everyone say we buy stuff cheap like dirty old suzuki and rusted out jeep",
+  "When hurricane come we climb into tree",
+  "Jamaica we have a bobsled team",
+  "its 5 am right now",
+  "im typing these at 5 am instead of sleeping",
+  "i cant think of anything to write am i this unfunny",
+  "Mr Christmas!",
+  "Noah Tongue",
+  "I remember i saw all of you guys toddling around!!",
+  "Guess i'll die",
+  "It's christmas. OOOOOOOOOOOOOOO",
+  "ts lowk pmo icl sybau",
+  "500 cigarettes",
+  "A fully functioning proxy and browser! All in an HTML web file! Such innovation!",
+  "Roblox thought I was 9",
+  "Do you want to build a granny",
+  "Never play ARTHURS NIGHTMARE at 3 AM...",
+  "Goat simulator is the goat",
+  "Angry birds space plz vro 🙏🙏🙏",
+  "bro what is this lame ahh movie",
+  "abdul malik",
+  "Did you know 1 in 2 people are gay? Well, I'm not gay. ...",
+  "Noah tried to get me into steal a brainrot 🤓",
+  "Calculus",
+  "Remember, you can always use a magnet to shut off someones chromebook when they annoy you",
+  "I LOVE getting 4 hours of sleep! And it's not even that hard to stay awake, like I can literally ju",
+  "My iphone passcode is 823892 if anyone needs it",
+  "Grannys house",
+  "Mr bui pls dont block downloads i need this 🙏",
+  "Finley lane so tuff",
+  "I got shot",
+  "Chevrolet fucking volt",
+  "Dodge fucking dart",
+  "Chevrolet volt",
+  "Dodge dart",
+  "Pressing reload + power button temporarily removes the school blockers",
+  "dev can this load a bit faster than the average coke addict",
+  "Holy shit i'm hungry",
+  "Optimized for zeroOS!",
+  "I really wanna close GlacierOS huh",
+  "why does everyone have truffled",
+  "Me: Don't share my sites to your friends Also me: why does nobody use my sites :(((",
+  "Some 4 year old at home depot saying tung tung tung sahur in his moms lap",
+  "is this tuff",
+  "Damn is 😂🎉",
+];
+
+// Helper to get a random message
+function getRandomSplash() {
+  const index = Math.floor(Math.random() * loadingMessages.length);
+  return loadingMessages[index];
+}
+
+async function loadPageInActiveTab() {
+  if (!activeTabId) return;
+
+  const input = document.getElementById('urlInput');
+  let rawInput = input.value.trim();
+  if (!rawInput) return;
+
+  const target = prepareUrl(rawInput);
+  input.value = target;
+
+  const tab = tabs.find(t => t.id === activeTabId);
+  const iframe = document.getElementById(`iframe-${activeTabId}`);
+  
+  // Pick a random message for this load
+  const currentSplash = getRandomSplash();
+
+  try {
+    updateStatus(`Loading ${target}...`);
+    
+    // Updated loading state with randomized splash message
+    iframe.srcdoc = `
+      <style>
+        body { 
+          background: rgba(255, 255, 255, 0.05); /* Transparent background */
+          backdrop-filter: blur(10px); /* Glass effect for the loading screen */
+          color: #FFFFFF; /* White text for visibility */
+          font-family: 'Open Sans', sans-serif; 
+          display: flex; 
+          flex-direction: column;
+          align-items: center; 
+          justify-content: center; 
+          height: 90vh; 
+          margin: 0;
+        }
+        .spinner {
+          border: 4px solid rgba(255, 255, 255, 0.3); /* Subtle light gray border */
+          border-top: 4px solid #60a5fa; /* Vibrant blue spinner */
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          animation: spin 1s linear infinite;
+          margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      </style>
+      <div class="spinner"></div>
+      <div style="font-size: 1.2rem; font-weight: 500; color: #00ffff;">${currentSplash}</div>
+      <div style="font-size: 0.8rem; margin-top: 10px; color: #ffffff;">Heading to: ${target}</div>
+    `;
+
+
+    const response = await fetch(proxyBase + encodeURIComponent(target));
+    if (!response.ok) throw new Error("Failed to fetch");
+
+    const html = await response.text();
+    iframe.srcdoc = typeof injectProxyScript === 'function' ? injectProxyScript(html, target) : html;
+
+    tab.url = target;
+    const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
+    const pageTitle = titleMatch ? titleMatch[1] : target.replace(/^https?:\/\//i, '');
+    updateTabTitle(activeTabId, pageTitle);
+    updateStatus("Ready");
+  } catch (err) {
+    updateStatus("Error loading page");
+    iframe.srcdoc = `<body style=" color:#ff5f5f; font-family: 'Tahoma'; padding:2rem;">Error: ${err.message}<br> Looks like this page failed to load. The URL you're trying to load might not work with this proxy. Maybe try reloading the page or waiting a while before trying again. A lot of times, the proxy server is overused and shuts down for the day.</body>`;
+  }
+}
+
+    
+    function injectProxyScript(html, baseUrl) {
+      const baseTag = `<base href="${baseUrl}">`;
+      const interceptScript = `
+        <script>
+          // Intercept link clicks
+          document.addEventListener('click', e => {
+            const a = e.target.closest('a[href]');
+            if (a && a.href && a.target !== '_blank') {
+              e.preventDefault();
+              parent.postMessage({ type: 'navigate', href: a.href }, '*');
+            }
+          });
+          
+          // Intercept console methods
+          const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+          };
+          
+          console.log = function(...args) {
+            originalConsole.log(...args);
+            parent.postMessage({ 
+              type: 'console', 
+              method: 'log', 
+              args: args.map(arg => String(arg))
+            }, '*');
+          };
+          
+          console.error = function(...args) {
+            originalConsole.error(...args);
+            parent.postMessage({ 
+              type: 'console', 
+              method: 'error', 
+              args: args.map(arg => String(arg))
+            }, '*');
+          };
+          
+          console.warn = function(...args) {
+            originalConsole.warn(...args);
+            parent.postMessage({ 
+              type: 'console', 
+              method: 'warn', 
+              args: args.map(arg => String(arg))
+            }, '*');
+          };
+          
+          console.info = function(...args) {
+            originalConsole.info(...args);
+            parent.postMessage({ 
+              type: 'console', 
+              method: 'info', 
+              args: args.map(arg => String(arg))
+            }, '*');
+          };
+          
+          // Intercept fetch requests for network panel
+          const originalFetch = window.fetch;
+          window.fetch = function(resource, init) {
+            const url = typeof resource === 'string' ? resource : resource.url;
+            parent.postMessage({ 
+              type: 'network', 
+              method: init?.method || 'GET',
+              url: url
+            }, '*');
+            return originalFetch.apply(this, arguments);
+          };
+          
+          // Intercept XHR for network panel
+          const originalXHROpen = XMLHttpRequest.prototype.open;
+          XMLHttpRequest.prototype.open = function(method, url) {
+            this._method = method;
+            this._url = url;
+            return originalXHROpen.apply(this, arguments);
+          };
+          
+          const originalXHRSend = XMLHttpRequest.prototype.send;
+          XMLHttpRequest.prototype.send = function() {
+            parent.postMessage({ 
+              type: 'network', 
+              method: this._method,
+              url: this._url
+            }, '*');
+            return originalXHRSend.apply(this, arguments);
+          };
+        <\/script>
+      `;
+      
+      const styleOverride = `
+        <style>
+          /* Optional: Add any style overrides here */
+        </style>
+      `;
+      
+      if (/<head[^>]*>/i.test(html)) {
+        return html.replace(/<head[^>]*>/i, match => match + baseTag + interceptScript + styleOverride);
+      } else {
+        return baseTag + interceptScript + styleOverride + html;
+      }
+    }
+    
+    function toggleDevTools() {
+      const devtools = document.getElementById('devtools');
+      devtools.classList.toggle('open');
+    }
+    
+    function closeDevTools() {
+      document.getElementById('devtools').classList.remove('open');
+    }
+    
+    function handleConsoleInput(e) {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('console-input');
+        const code = input.value;
+        
+        if (!code.trim()) return;
+        
+        // Log the input to the console output
+        appendToConsole('log', `> ${code}`);
+        
+        // Execute in the active iframe
+        executeInActiveTab(code);
+        
+        // Clear the input
+        input.value = '';
+      }
+    }
+    
+    function executeInActiveTab(code) {
+      if (!activeTabId) return;
+      
+      const iframe = document.getElementById(`iframe-${activeTabId}`);
+      try {
+        // Execute the code in the iframe and get the result
+        const result = iframe.contentWindow.eval(`
+          try {
+            const result = eval(${JSON.stringify(code)});
+            if (result !== undefined) {
+              console.log(result);
+            }
+            "SUCCESS";
+          } catch (e) {
+            console.error(e.message);
+            "ERROR: " + e.message;
+          }
+        `);
+        
+        if (result && result.startsWith && result.startsWith('ERROR:')) {
+          appendToConsole('error', result);
+        }
+      } catch (e) {
+        appendToConsole('error', `Failed to execute: ${e.message}`);
+      }
+    }
+    
+    function injectJavaScript() {
+      const code = document.getElementById('js-inject-area').value;
+      if (!code.trim()) return;
+      
+      executeInActiveTab(code);
+      updateStatus('JavaScript injected');
+    }
+    
+    function appendToConsole(type, message) {
+      const consoleOutput = document.getElementById('console-output');
+      const line = document.createElement('div');
+      line.className = `console-line console-${type}`;
+      line.textContent = message;
+      consoleOutput.appendChild(line);
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+    
+    function saveJavaScriptSnippet() {
+      const code = document.getElementById('js-inject-area').value;
+      if (!code.trim()) return;
+      
+      const snippetName = prompt('Enter a name for this snippet:');
+      if (!snippetName) return;
+      
+      // Get existing snippets
+      let savedSnippets = JSON.parse(localStorage.getItem('procksiSnippets') || '{}');
+      savedSnippets[snippetName] = code;
+      
+      // Save back to localStorage
+      localStorage.setItem('procksiSnippets', JSON.stringify(savedSnippets));
+      
+      loadSavedSnippetsFromStorage();
+      updateStatus(`Snippet "${snippetName}" saved`);
+    }
+    
+    function loadSavedSnippetsFromStorage() {
+      const savedSnippets = JSON.parse(localStorage.getItem('procksiSnippets') || '{}');
+      const select = document.getElementById('saved-snippets');
+      
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+      
+      for (const [name, code] of Object.entries(savedSnippets)) {
+        const option = document.createElement('option');
+        option.value = code;
+        option.textContent = name;
+        select.appendChild(option);
+      }
+    }
+    
+    function loadSavedSnippet(e) {
+      const code = e.target.value;
+      if (code) {
+        document.getElementById('js-inject-area').value = code;
+      }
+      // Reset the select
+      setTimeout(() => {
+        e.target.selectedIndex = 0;
+      }, 100);
+    }
+    
+    function navigateBack() {
+      if (!activeTabId) return;
+      
+      const tab = tabs.find(t => t.id === activeTabId);
+      if (tab && tab.currentHistoryIndex > 0) {
+        tab.currentHistoryIndex--;
+        const url = tab.history[tab.currentHistoryIndex];
+        document.getElementById('urlInput').value = url;
+        loadPageInActiveTab();
+      }
+    }
+    
+    function navigateForward() {
+      if (!activeTabId) return;
+      
+      const tab = tabs.find(t => t.id === activeTabId);
+      if (tab && tab.currentHistoryIndex < tab.history.length - 1) {
+        tab.currentHistoryIndex++;
+        const url = tab.history[tab.currentHistoryIndex];
+        document.getElementById('urlInput').value = url;
+        loadPageInActiveTab();
+      }
+    }
+    
+    function refreshPage() {
+      if (!activeTabId) return;
+      
+      const tab = tabs.find(t => t.id === activeTabId);
+      if (tab && tab.url) {
+        document.getElementById('urlInput').value = tab.url;
+        loadPageInActiveTab();
+      }
+    }
+    
+    function updateNavigationButtons() {
+      if (!activeTabId) return;
+      
+      const tab = tabs.find(t => t.id === activeTabId);
+      const backButton = document.getElementById('back-button');
+      const forwardButton = document.getElementById('forward-button');
+      
+      backButton.disabled = !tab || tab.currentHistoryIndex <= 0;
+      forwardButton.disabled = !tab || tab.currentHistoryIndex >= tab.history.length - 1;
+    }
+    
+    function updateStatus(message) {
+      document.getElementById('status-text').textContent = message;
+    }
+    
+    function updateTabCount() {
+      document.getElementById('tab-count').textContent = `Tabs: ${tabs.length}`;
+    }
+    
+    window.addEventListener("message", e => {
+      if (e.data?.type === "navigate" && e.data.href) {
+        document.getElementById('urlInput').value = e.data.href;
+        loadPageInActiveTab();
+      } else if (e.data?.type === "console") {
+        appendToConsole(e.data.method, e.data.args.join(' '));
+      } else if (e.data?.type === "network") {
+        const networkLog = document.getElementById('network-log');
+        const entry = document.createElement('div');
+        entry.className = 'console-line';
+        entry.textContent = `${e.data.method}: ${e.data.url}`;
+        networkLog.appendChild(entry);
+        networkLog.scrollTop = networkLog.scrollHeight;
+      }
+    });
+    
+    // URL input event
+    document.getElementById('urlInput').addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        loadPageInActiveTab();
+      }
+    });
+  </script>
+</html>
+
